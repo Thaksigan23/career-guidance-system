@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------
+   Your Existing Styles
+---------------------------------------------- */
+
+.gradient-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card-shadow {
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+}
+
+/* ---------------------------------------------
+   NEW NAVBAR STYLING + ANIMATIONS
+---------------------------------------------- */
+
+/* Desktop Navbar Links */
+.nav-link {
+  @apply text-gray-600 hover:text-blue-600 px-3 py-2;
+}
+
+/* Username Button (with avatar) */
+.nav-username {
+  @apply text-gray-700 font-semibold px-3 py-2 hover:text-blue-600;
+}
+
+/* Dropdown Menu Items */
+.dropdown-item {
+  @apply block px-4 py-2 text-gray-700 hover:bg-gray-100;
+}
+
+/* Mobile Menu Link Style */
+.mobile-link {
+  @apply block px-4 py-2 text-gray-700 hover:bg-gray-100;
+}
+
+/* Fade-in animation for dropdown */
+.fade-in {
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Slide-down for mobile menu */
+.animate-slideDown {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
