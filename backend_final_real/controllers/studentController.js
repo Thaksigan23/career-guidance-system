@@ -7,9 +7,9 @@ import nodemailer from "nodemailer";
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER,  
-    pass: process.env.EMAIL_PASS
-  }
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
 });
 
 // -------------------------
@@ -24,14 +24,14 @@ async function sendEmail(to, subject, text) {
 }
 
 // -----------------------------------------------------
-// GET PROFILE
+// GET PROFILE  ✅ FIXED
 // -----------------------------------------------------
 export const getProfile = (req, res) => {
   const userId = req.user.id;
 
   const sql = `
     SELECT 
-      u.name,
+      u.full_name,
       u.email,
       u.phone,
       sp.education,
@@ -43,43 +43,51 @@ export const getProfile = (req, res) => {
   `;
 
   db.query(sql, [userId], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-
-    return res.json(rows[0] || {});
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Failed to load profile" });
+    }
+    res.json(rows[0] || {});
   });
 };
 
 // -----------------------------------------------------
-// UPDATE PROFILE (FINAL)
+// UPDATE PROFILE (FINAL FIXED)
 // -----------------------------------------------------
 export const updateProfile = (req, res) => {
   const userId = req.user.id;
   const userEmail = req.user.email;
 
-  const { name, phone, education, skills, experience } = req.body;
+  // ✅ FIXED: full_name instead of name
+  const { full_name, phone, education, skills, experience } = req.body;
 
-  // 1️⃣ UPDATE users TABLE
+  // -------------------------------------------------
+  // 1️⃣ UPDATE users TABLE  ✅ FIXED
+  // -------------------------------------------------
   const updateUserSql = `
     UPDATE users 
-    SET name = ?, phone = ?
+    SET full_name = ?, phone = ?
     WHERE id = ?
   `;
 
-  db.query(updateUserSql, [name || null, phone || null, userId], (err) => {
+  db.query(updateUserSql, [full_name || null, phone || null, userId], (err) => {
     if (err) return res.status(500).json({ error: err.message });
 
+    // -------------------------------------------------
     // 2️⃣ CHECK IF PROFILE EXISTS
+    // -------------------------------------------------
     const checkSql = "SELECT * FROM student_profiles WHERE user_id = ?";
 
     db.query(checkSql, [userId], (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });
 
-      // -----------------------------------------------------
+      // =================================================
       // CASE A — FIRST TIME → INSERT PROFILE
-      // -----------------------------------------------------
+      // =================================================
       if (rows.length === 0) {
         const insertSql = `
-          INSERT INTO student_profiles (user_id, education, skills, experience)
+          INSERT INTO student_profiles 
+          (user_id, education, skills, experience)
           VALUES (?, ?, ?, ?)
         `;
 
@@ -89,11 +97,10 @@ export const updateProfile = (req, res) => {
           async (err, result) => {
             if (err) return res.status(500).json({ error: err.message });
 
-            // Send Email (SAFE)
             await sendEmail(
               userEmail,
               "Your Profile Has Been Created",
-              `Hi ${name}, your student profile has been created successfully.`
+              `Hi ${full_name}, your student profile has been created successfully.`
             );
 
             return res.json({
@@ -105,9 +112,9 @@ export const updateProfile = (req, res) => {
         );
       }
 
-      // -----------------------------------------------------
+      // =================================================
       // CASE B — UPDATE EXISTING PROFILE
-      // -----------------------------------------------------
+      // =================================================
       else {
         const updateSql = `
           UPDATE student_profiles
@@ -124,7 +131,7 @@ export const updateProfile = (req, res) => {
             await sendEmail(
               userEmail,
               "Profile Updated",
-              `Hi ${name}, your student profile has been updated successfully.`
+              `Hi ${full_name}, your student profile has been updated successfully.`
             );
 
             return res.json({

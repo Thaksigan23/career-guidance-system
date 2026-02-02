@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import API from "../api/api";        
+import API from "../api/api";
 import JobModal from "../components/JobModal";
 import { Link } from "react-router-dom";
 
@@ -7,160 +7,210 @@ export default function Jobs() {
   const [jobs, setJobs] = useState([]);
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
+  // 🔐 LOAD USER
+  let user = null;
+  try {
+    const stored = localStorage.getItem("user");
+    if (stored) user = JSON.parse(stored);
+  } catch (e) {
+    console.error("Invalid user in storage", e);
+  }
+
+  // 📦 LOAD JOBS
   useEffect(() => {
+    setLoading(true);
     API.get("/jobs")
-      .then((res) => setJobs(res.data))
-      .catch((err) => console.log("Error loading jobs:", err));
+      .then((res) => setJobs(res.data || []))
+      .catch(() => setJobs([]))
+      .finally(() => setLoading(false));
   }, []);
 
+  // 🔍 SEARCH
   const filteredJobs = jobs.filter((job) => {
     const s = search.toLowerCase();
     return (
-      job.title.toLowerCase().includes(s) ||
-      job.company.toLowerCase().includes(s) ||
-      job.location.toLowerCase().includes(s) ||
-      job.description.toLowerCase().includes(s)
+      job.title?.toLowerCase().includes(s) ||
+      job.company?.toLowerCase().includes(s) ||
+      job.location?.toLowerCase().includes(s)
     );
   });
 
+  // 🧑‍🎓 APPLY
   async function applyToJob(jobId) {
     try {
-      await API.post("/applications/apply", {
+      await API.post("/applications", {
         job_id: jobId,
         message: "I would like to apply for this job.",
       });
-
-      alert("Application submitted successfully!");
-    } catch (error) {
+      alert("Application submitted!");
+    } catch {
       alert("Failed to apply");
-      console.log(error);
     }
   }
 
+  // 💾 SAVE
   async function saveJob(jobId) {
     try {
-      await API.post("/saved/save", { job_id: jobId });
+      await API.post("/saved", { job_id: jobId });
       alert("Job saved!");
-    } catch (error) {
+    } catch {
       alert("Failed to save job");
-      console.log(error);
     }
   }
 
+  // 🏢 POST JOB
   async function handlePostJob(form) {
-  try {
-    await API.post("/jobs/post", form);
-
-    alert("Job posted successfully!");
-
-    // Reload jobs from backend
-    const { data } = await API.get("/jobs");
-    setJobs(data);
-
-    setModalOpen(false);
-
-  } catch (error) {
-    console.log(error);
-    alert("Failed to post job");
+    try {
+      await API.post("/jobs", {
+        ...form,
+        salary: form.salary ? Number(form.salary) : null,
+      });
+      const { data } = await API.get("/jobs");
+      setJobs(data || []);
+      setModalOpen(false);
+      alert("Job posted!");
+    } catch {
+      alert("Failed to post job");
+    }
   }
-}
 
+  // 🦴 SKELETON CARD
+  function SkeletonJobCard() {
+    return (
+      <div className="bg-white rounded-2xl p-6 shadow animate-pulse">
+        <div className="h-6 w-2/3 bg-gray-200 rounded mb-3"></div>
+        <div className="flex gap-2 mb-4">
+          <div className="h-4 w-24 bg-gray-200 rounded-full"></div>
+          <div className="h-4 w-32 bg-gray-200 rounded-full"></div>
+        </div>
+        <div className="flex gap-3">
+          <div className="h-9 w-24 bg-gray-200 rounded-lg"></div>
+          <div className="h-9 w-20 bg-gray-200 rounded-lg"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen pt-20 bg-gray-50">
-      <div className="max-w-6xl mx-auto py-12 px-4">
+    <div className="min-h-screen pt-24 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 px-4">
+      <div className="max-w-6xl mx-auto py-12">
 
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-800">Job Opportunities</h2>
+        {/* HEADER */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-10">
+          <div>
+            <h2 className="text-4xl font-extrabold text-gray-800">
+              Job Opportunities
+            </h2>
+            <p className="text-gray-600 mt-1">
+              Find your next career move 🚀
+            </p>
+          </div>
 
-          <button
-            onClick={() => setModalOpen(true)}
-            className="btn-primary text-white font-bold py-2 px-6 rounded-md"
-          >
-            Post Job
-          </button>
+          {user?.role === "employer" && (
+            <button
+              onClick={() => setModalOpen(true)}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 
+                         text-white font-bold py-2 px-6 rounded-lg shadow 
+                         hover:scale-105 transition"
+            >
+              + Post Job
+            </button>
+          )}
         </div>
 
+        {/* SEARCH */}
         <input
           type="text"
-          placeholder="Search jobs..."
-          className="w-full mb-6 px-4 py-2 border rounded-md"
+          placeholder="🔍 Search by title, company or location..."
+          className="w-full mb-8 px-5 py-3 rounded-xl border shadow 
+                     focus:ring-2 focus:ring-indigo-400 outline-none"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
 
-        <div className="space-y-6">
-          {filteredJobs.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">No jobs found.</div>
-          ) : (
-            filteredJobs.map((job) => (
-              <div key={job.id} className="bg-white card-shadow rounded-lg p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
+        {/* JOB LIST */}
+        {loading ? (
+          <div className="grid gap-6">
+            {[...Array(5)].map((_, i) => (
+              <SkeletonJobCard key={i} />
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-6">
+            {filteredJobs.map((job) => (
+              <div
+                key={job.id}
+                className="bg-white rounded-2xl p-6 shadow-md 
+                           hover:shadow-xl transition"
+              >
+                <div className="flex flex-col md:flex-row justify-between">
 
-                    {/* FIXED: Job Title Link */}
+                  {/* LEFT */}
+                  <div>
                     <Link
                       to={`/jobs/${job.id}`}
-                      className="text-xl font-bold text-blue-600 hover:underline"
+                      className="text-2xl font-bold text-indigo-600 hover:underline"
                     >
                       {job.title}
                     </Link>
 
-                    <p className="text-lg text-blue-600">{job.company}</p>
-                    <p className="text-gray-600">{job.location}</p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
+                        {job.company}
+                      </span>
+                      <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                        📍 {job.location}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="text-right">
-                    <p className="text-lg font-semibold text-green-600">
-                      {job.salary || "Not specified"}
+                  {/* RIGHT */}
+                  {user?.role === "student" && (
+                    <div className="flex gap-3 mt-4 md:mt-0">
+                      <button
+                        onClick={() => applyToJob(job.id)}
+                        className="bg-green-500 text-white px-4 py-2 rounded-lg 
+                                   hover:bg-green-600 transition"
+                      >
+                        Apply
+                      </button>
+
+                      <button
+                        onClick={() => saveJob(job.id)}
+                        className="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-lg 
+                                   hover:bg-yellow-200 transition"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  )}
+
+                  {user?.role === "employer" && (
+                    <p className="mt-4 md:mt-0 text-sm text-gray-500 italic">
+                      Employers cannot apply
                     </p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(job.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <h4 className="font-semibold text-gray-800 mb-2">
-                    Description:
-                  </h4>
-                  <p className="text-gray-700">{job.description}</p>
-                </div>
-
-                <div className="mb-4">
-                  <h4 className="font-semibold text-gray-800 mb-2">
-                    Requirements:
-                  </h4>
-                  <p className="text-gray-700">{job.requirements}</p>
-                </div>
-
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => applyToJob(job.id)}
-                    className="btn-primary text-white font-bold py-2 px-4 rounded-md"
-                  >
-                    Apply Now
-                  </button>
-
-                  <button
-                    onClick={() => saveJob(job.id)}
-                    className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300"
-                  >
-                    Save for Later
-                  </button>
+                  )}
                 </div>
               </div>
-            ))
-          )}
-        </div>
-      </div>
+            ))}
 
-      <JobModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSubmit={handlePostJob}
-      />
+            {filteredJobs.length === 0 && (
+              <p className="text-center text-gray-500 text-lg">
+                No jobs found 😔
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* MODAL */}
+        <JobModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onSubmit={handlePostJob}
+        />
+      </div>
     </div>
   );
 }

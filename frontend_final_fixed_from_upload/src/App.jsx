@@ -25,7 +25,12 @@ import EmployerDashboard from "./pages/EmployerDashboard";
 import ProfileView from "./pages/ProfileView";
 
 import CVAnalysis from "./pages/CVAnalysis";
-
+import CVHistory from "./pages/CVHistory";
+import CareerPath from "./pages/CareerPath";
+import { Navigate } from "react-router-dom";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminJobs from "./pages/AdminJobs";
 function App() {
   return (
     <Router>
@@ -39,14 +44,8 @@ function App() {
         <Route path="/login" element={<Login />} />
 
         {/* JOBS PAGE */}
-        <Route
-          path="/jobs"
-          element={
-            <ProtectedRoute allowedRoles={["student", "employer"]}>
-              <Jobs />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/jobs" element={<Jobs />} />
+
 
         <Route
           path="/jobs/:id"
@@ -147,6 +146,23 @@ function App() {
           }
         />
 
+<Route
+  path="/cv-history"
+  element={
+    <ProtectedRoute allowedRoles={["student"]}>
+      <CVHistory />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/career-path"
+  element={
+    <ProtectedRoute allowedRoles={["student"]}>
+      <CareerPath />
+    </ProtectedRoute>
+  }
+/>
+
         <Route
           path="/cv-analysis"
           element={
@@ -165,6 +181,37 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {/* ================================
+    ADMIN-ONLY ROUTES
+================================= */}
+
+<Route
+  path="/admin"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminDashboard />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/users"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminUsers />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/jobs"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminJobs />
+    </ProtectedRoute>
+  }
+/>
+
 
       </Routes>
     </Router>

@@ -3,11 +3,11 @@ import API from "../api/api";
 
 export default function Register() {
   const [form, setForm] = useState({
-    name: "",
+    full_name: "",
     email: "",
     password: "",
-    role: "student", // student or employer
-    phone: "",       // optional
+    role: "student",
+    phone: "",
   });
 
   function handleChange(e) {
@@ -18,9 +18,9 @@ export default function Register() {
     e.preventDefault();
 
     try {
-      // Correct: send "name", NOT "full_name"
+      // ✅ SEND full_name (matches DB + backend)
       const res = await API.post("/auth/register", {
-        name: form.name,
+        full_name: form.full_name,
         email: form.email,
         password: form.password,
         role: form.role,
@@ -29,16 +29,10 @@ export default function Register() {
 
       alert("Account created successfully!");
 
-      // Store token and user
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      // ❗ Register endpoint DOES NOT return token
+      // Redirect to login instead
+      window.location.href = "/login";
 
-      // Redirect
-      if (form.role === "student") {
-        window.location.href = "/student-profile";
-      } else {
-        window.location.href = "/employer-profile";
-      }
     } catch (err) {
       alert(err.response?.data?.error || "Registration failed");
     }
@@ -53,7 +47,8 @@ export default function Register() {
           {/* Full Name */}
           <label className="block mb-2">Full Name</label>
           <input
-            name="name"
+            name="full_name"
+            value={form.full_name}
             onChange={handleChange}
             className="w-full border px-3 py-2 mb-4 rounded"
             required
@@ -64,6 +59,7 @@ export default function Register() {
           <input
             name="email"
             type="email"
+            value={form.email}
             onChange={handleChange}
             className="w-full border px-3 py-2 mb-4 rounded"
             required
@@ -74,6 +70,7 @@ export default function Register() {
           <input
             name="password"
             type="password"
+            value={form.password}
             onChange={handleChange}
             className="w-full border px-3 py-2 mb-4 rounded"
             required
@@ -83,6 +80,7 @@ export default function Register() {
           <label className="block mb-2">Account Type</label>
           <select
             name="role"
+            value={form.role}
             onChange={handleChange}
             className="w-full border px-3 py-2 mb-4 rounded"
           >

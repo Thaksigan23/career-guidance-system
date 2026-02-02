@@ -1,16 +1,21 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
+// Create context
 const AppContext = createContext();
-export const useApp = () => useContext(AppContext);
 
-export default function AppProvider({ children }) {
-  // GLOBAL USER
+/* =========================
+   MAIN PROVIDER
+========================= */
+export const AppProvider = ({ children }) => {
+  // GLOBAL USER (includes token)
   const [user, setUser] = useState(null);
 
   // GLOBAL JOBS
   const [jobs, setJobs] = useState([]);
 
-  // Load user + jobs from localStorage
+  /* =========================
+     LOAD FROM LOCAL STORAGE
+  ========================= */
   useEffect(() => {
     const savedUser = JSON.parse(localStorage.getItem("currentUser"));
     const savedJobs = JSON.parse(localStorage.getItem("jobs")) || [];
@@ -19,33 +24,65 @@ export default function AppProvider({ children }) {
     if (savedJobs) setJobs(savedJobs);
   }, []);
 
-  // Save when updated
+  /* =========================
+     SAVE TO LOCAL STORAGE
+  ========================= */
   useEffect(() => {
-    if (user) localStorage.setItem("currentUser", JSON.stringify(user));
+    if (user) {
+      localStorage.setItem("currentUser", JSON.stringify(user));
+    }
   }, [user]);
 
   useEffect(() => {
     localStorage.setItem("jobs", JSON.stringify(jobs));
   }, [jobs]);
 
-  // AUTH UTILS
-  function login(userData) {
+  /* =========================
+     AUTH FUNCTIONS
+  ========================= */
+  const login = (userData) => {
     setUser(userData);
-  }
+  };
 
-  function logout() {
+  const logout = () => {
     setUser(null);
     localStorage.removeItem("currentUser");
-  }
+  };
 
-  // JOB UTILS
-  function addJob(job) {
-    setJobs((prev) => [...prev, job]);
-  }
+  /* =========================
+     JOB FUNCTIONS
+  ========================= */
+  const addJob = (job) => {
+    setJobs((prevJobs) => [...prevJobs, job]);
+  };
 
   return (
-    <AppContext.Provider value={{ user, login, logout, jobs, addJob }}>
+    <AppContext.Provider
+      value={{
+        user,
+        token: user?.token, // ⭐ important
+        jobs,
+        login,
+        logout,
+        addJob,
+      }}
+    >
       {children}
     </AppContext.Provider>
   );
-}
+};
+
+/* =========================
+   CUSTOM HOOKS
+========================= */
+
+// General app access
+export const useApp = () => {
+  return useContext(AppContext);
+};
+
+// Auth-specific hook (USED BY RECOMMENDATIONS)
+export const useAuth = () => {
+  const { user, token } = useContext(AppContext);
+  return { user, token };
+};

@@ -1,32 +1,47 @@
 import { db } from "../config/db.js";
 
-// -----------------------------------------------------
-// POST NEW JOB
-// -----------------------------------------------------
 export const postJob = (req, res) => {
+  const employerId = req.user.id; // from JWT
   const { title, company, location, salary, description, requirements } = req.body;
-  const employer_id = req.user.id;
 
-  if (!title || !company || !description) {
-    return res.status(400).json({ error: "Missing required fields" });
+  if (!title) {
+    return res.status(400).json({ error: "Job title is required" });
   }
+  // ✅ FIX: define parsedSalary properly
+  const parsedSalary =
+    salary === null || salary === undefined || salary === ""
+      ? null
+      : Number(salary);
 
   const sql = `
-    INSERT INTO jobs 
+    INSERT INTO jobs
     (employer_id, title, company, location, salary, description, requirements)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
-    sql,
-    [employer_id, title, company, location, salary, description, requirements],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
+  sql,
+  [
+    employerId,
+    title,
+    company || null,
+    location || null,
+    parsedSalary,
+    description || null,
+    requirements || null,
+  ],
 
-      res.json({ message: "Job posted successfully", id: result.insertId });
+    (err) => {
+      if (err) {
+        console.error("POST JOB ERROR:", err);
+        return res.status(500).json({ error: err.message });
+      }
+
+      res.json({ message: "Job posted successfully" });
     }
   );
 };
+
 
 
 // -----------------------------------------------------
@@ -36,18 +51,26 @@ export const getJobs = (req, res) => {
   const sql = `
     SELECT 
       j.*, 
-      u.name AS employer_name
+      u.full_name AS employer_name
     FROM jobs j
     JOIN users u ON j.employer_id = u.id
+    WHERE j.status = 'approved'   -- ✅ FILTER
     ORDER BY j.created_at DESC
   `;
 
   db.query(sql, (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-
+    if (err) {
+      console.error("GET JOBS ERROR:", err);
+      return res.status(500).json({ error: err.message });
+    }
     res.json(rows);
   });
 };
+
+
+
+
+
 
 
 // -----------------------------------------------------
@@ -57,14 +80,14 @@ export const getJob = (req, res) => {
   const { id } = req.params;
 
   const sql = `
-    SELECT 
-      j.*, 
-      u.name AS employer_name,
-      u.email AS employer_email
-    FROM jobs j
-    JOIN users u ON j.employer_id = u.id
-    WHERE j.id = ?
-  `;
+  SELECT 
+    j.*, 
+    u.full_name AS employer_name,
+    u.email AS employer_email
+  FROM jobs j
+  JOIN users u ON j.employer_id = u.id
+  WHERE j.id = ?
+`;
 
   db.query(sql, [id], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });

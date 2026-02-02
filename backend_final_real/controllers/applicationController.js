@@ -1,69 +1,80 @@
 import { db } from "../config/db.js";
 
-// -----------------------------------------------------------
-// APPLY TO JOB (Students)
-// -----------------------------------------------------------
+/* =========================================================
+   APPLY TO JOB (STUDENT)
+========================================================= */
 export const applyJob = (req, res) => {
-  const student_id = req.user.id;
   const { job_id, message } = req.body;
+  const student_id = req.user.id;
 
   if (!job_id) {
     return res.status(400).json({ error: "Job ID is required" });
   }
 
+  // ✅ CHECK DUPLICATE FIRST
   const checkSql = `
-    SELECT * FROM applications 
+    SELECT id FROM applications
     WHERE job_id = ? AND student_id = ?
   `;
 
   db.query(checkSql, [job_id, student_id], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-
-    if (rows.length > 0) {
-      return res.json({ message: "Already applied" });
+    if (err) {
+      console.error("Check apply error:", err);
+      return res.status(500).json({ error: "Server error" });
     }
 
-    const sql = `
+    if (rows.length > 0) {
+      return res.status(200).json({
+        success: false,
+        message: "You have already applied for this job"
+      });
+    }
+
+    // ✅ INSERT
+    const insertSql = `
       INSERT INTO applications (job_id, student_id, message)
       VALUES (?, ?, ?)
     `;
 
-    db.query(sql, [job_id, student_id, message], (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
+    db.query(insertSql, [job_id, student_id, message || ""], (err) => {
+      if (err) {
+        console.error("Apply insert error:", err);
+        return res.status(500).json({ error: "Failed to apply" });
+      }
 
-      res.json({
-        message: "Application submitted",
-        id: result.insertId,
+      // ✅ ALWAYS RETURN 200
+      res.status(200).json({
+        success: true,
+        message: "Applied successfully"
       });
     });
   });
 };
 
 
-// -----------------------------------------------------------
-// GET APPLICATIONS FOR A SPECIFIC JOB (Employer only)
-// -----------------------------------------------------------
+/* =========================================================
+   GET APPLICATIONS FOR A JOB (EMPLOYER)
+========================================================= */
 export const getApplicationsForJob = (req, res) => {
   const employer_id = req.user.id;
   const { job_id } = req.params;
 
   const checkSql = `
-    SELECT * FROM jobs WHERE id = ? AND employer_id = ?
+    SELECT id FROM jobs
+    WHERE id = ? AND employer_id = ?
   `;
 
   db.query(checkSql, [job_id, employer_id], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
-
-    if (rows.length === 0) {
+    if (rows.length === 0)
       return res.status(403).json({ error: "Unauthorized" });
-    }
 
     const sql = `
       SELECT 
         a.id,
         a.message,
         a.created_at,
-        u.name,
+        u.full_name,
         u.email,
         u.phone
       FROM applications a
@@ -74,16 +85,14 @@ export const getApplicationsForJob = (req, res) => {
 
     db.query(sql, [job_id], (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });
-
       res.json(rows);
     });
   });
 };
 
-
-// -----------------------------------------------------------
-// GET APPLICATIONS BY LOGGED-IN STUDENT
-// -----------------------------------------------------------
+/* =========================================================
+   GET MY APPLICATIONS (STUDENT)
+========================================================= */
 export const getMyApplications = (req, res) => {
   const student_id = req.user.id;
 
@@ -103,15 +112,13 @@ export const getMyApplications = (req, res) => {
 
   db.query(sql, [student_id], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
-
     res.json(rows);
   });
 };
 
-
-// -----------------------------------------------------------
-// GET ALL APPLICANTS FOR ALL JOBS (Employer Dashboard)
-// -----------------------------------------------------------
+/* =========================================================
+   EMPLOYER DASHBOARD – ALL APPLICANTS
+========================================================= */
 export const getEmployerApplicants = (req, res) => {
   const employer_id = req.user.id;
 
@@ -121,7 +128,7 @@ export const getEmployerApplicants = (req, res) => {
       a.job_id,
       a.message,
       a.created_at,
-      u.name,
+      u.full_name,
       u.email,
       u.phone,
       j.title AS job_title
@@ -134,7 +141,6 @@ export const getEmployerApplicants = (req, res) => {
 
   db.query(sql, [employer_id], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
-
     res.json(rows);
   });
 };

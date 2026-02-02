@@ -3,7 +3,7 @@ import API from "../api/api";
 
 export default function StudentProfile() {
   const [form, setForm] = useState({
-    name: "",
+    full_name: "",
     email: "",
     phone: "",
     education: "",
@@ -15,28 +15,34 @@ export default function StudentProfile() {
 
   // LOAD STUDENT PROFILE
   useEffect(() => {
-    async function loadProfile() {
-      try {
-        const res = await API.get("/students/me");
-        const data = res.data || {};
+  async function loadProfile() {
+    try {
+      const res = await API.get("/students/me", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
-        // If profile exists → fill details
-        setForm({
-          name: data.name || "",
-          email: data.email || "",
-          phone: data.phone || "",
-          education: data.education || "",
-          skills: data.skills || "",
-          experience: data.experience || "",
-        });
-      } catch (err) {
-        console.log("Profile load error:", err);
-      }
+      const data = res.data || {};
+
+      setForm({
+        full_name: data.full_name || "",
+        email: data.email || "",
+        phone: data.phone || "",
+        education: data.education || "",
+        skills: data.skills || "",
+        experience: data.experience || "",
+      });
+    } catch (err) {
+      console.error("Profile load error:", err.response?.data || err.message);
+    } finally {
       setLoading(false);
     }
+  }
 
-    loadProfile();
-  }, []);
+  loadProfile();
+}, []);
+
 
   // HANDLE INPUT
   function handleChange(e) {
@@ -48,137 +54,134 @@ export default function StudentProfile() {
     e.preventDefault();
 
     try {
-      await API.post("/students/me", form);
-      alert("Profile saved!");
+      await API.post(
+  "/students/me",
+  form,
+  {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  }
+);
 
-      // Redirect to profile viewing page
-      window.location.href = "/profile";
+      alert("Profile saved successfully!");
+      window.location.reload();
     } catch (err) {
       console.log(err);
       alert("Failed to save profile");
     }
   }
 
-  if (loading)
+  if (loading) {
     return (
       <div className="pt-20 text-center text-gray-600 text-lg">
         Loading profile...
       </div>
     );
+  }
 
-  // Auto avatar from UI-Avatars API
+  // Avatar
   const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    form.name || "User"
+    form.full_name || "User"
   )}&background=0D8ABC&color=fff&size=128&rounded=true`;
 
   return (
-    <div className="min-h-screen pt-20 bg-gray-50">
-      <div className="max-w-4xl mx-auto py-12 px-4">
-        <div className="bg-white rounded-lg card-shadow p-8">
+  <div className="min-h-screen pt-24 bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100">
+    <div className="max-w-4xl mx-auto px-4">
+      <div className="profile-card">
 
-          {/* HEADER SECTION */}
-          <div className="flex flex-col items-center mb-8">
-            <img
-              src={avatarUrl}
-              alt="Avatar"
-              className="w-28 h-28 rounded-full shadow-md mb-3"
-            />
+        {/* HEADER */}
+        <div className="flex flex-col items-center mb-10">
+          <img
+            src={avatarUrl}
+            alt="Avatar"
+            className="w-32 h-32 rounded-full shadow-xl mb-4 ring-4 ring-indigo-300"
+          />
 
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">
-              Student Profile
-            </h2>
+          <h2 className="text-4xl font-extrabold text-indigo-700">
+            {form.full_name || "Student Profile"}
+          </h2>
 
-            <button
-              onClick={() => window.history.back()}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md"
-            >
-              ← Back
-            </button>
-          </div>
+          <p className="text-gray-600 mt-1">{form.email}</p>
+        </div>
 
-          {/* FORM */}
-          <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit}>
+
+          {/* PERSONAL INFO */}
+          <div className="mb-10">
+            <h3 className="section-title">👤 Personal Information</h3>
+
             <div className="grid md:grid-cols-2 gap-6">
-
               <div>
-                <label className="block text-gray-700 mb-2">Full Name</label>
+                <label>Full Name</label>
                 <input
-                  name="name"
-                  type="text"
-                  value={form.name}
+                  name="full_name"
+                  value={form.full_name}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded"
+                  className="input-field"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-700 mb-2">Email</label>
-                <input
-                  name="email"
-                  type="email"
-                  value={form.email}
-                  disabled
-                  className="w-full px-3 py-2 border rounded bg-gray-100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">Phone</label>
+                <label>Phone</label>
                 <input
                   name="phone"
-                  type="tel"
                   value={form.phone}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded"
+                  className="input-field"
                 />
               </div>
+            </div>
+          </div>
 
-              <div>
-                <label className="block text-gray-700 mb-2">Education</label>
-                <input
-                  name="education"
-                  type="text"
-                  value={form.education}
-                  onChange={handleChange}
-                  placeholder="e.g., BSc Computer Science"
-                  className="w-full px-3 py-2 border rounded"
-                />
-              </div>
+          {/* ACADEMIC INFO */}
+          <div className="mb-10">
+            <h3 className="section-title">🎓 Academic Information</h3>
 
+            <div className="mb-4">
+              <label>Education</label>
+              <input
+                name="education"
+                value={form.education}
+                onChange={handleChange}
+                className="input-field"
+              />
             </div>
 
-            <div className="mt-6">
-              <label className="block text-gray-700 mb-2">Skills</label>
+            <div className="mb-4">
+              <label>Skills</label>
               <textarea
                 name="skills"
                 rows="3"
                 value={form.skills}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border rounded"
-              ></textarea>
+                className="textarea-field"
+              />
             </div>
 
-            <div className="mt-6">
-              <label className="block text-gray-700 mb-2">Experience</label>
+            <div>
+              <label>Experience</label>
               <textarea
                 name="experience"
                 rows="4"
                 value={form.experience}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border rounded"
-              ></textarea>
+                className="textarea-field"
+              />
             </div>
+          </div>
 
-            <button
-              type="submit"
-              className="mt-6 btn-primary text-white font-bold py-2 px-6 rounded-md"
-            >
-              Save Profile
+          {/* SAVE */}
+          <div className="text-center">
+            <button type="submit" className="save-btn">
+              💾 Save Profile
             </button>
-          </form>
+          </div>
 
-        </div>
+        </form>
       </div>
     </div>
-  );
+  </div>
+);
+
 }

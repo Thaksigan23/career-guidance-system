@@ -8,17 +8,12 @@ export default function EmployerApplicants() {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // -----------------------------
-  // LOAD APPLICANTS FOR THIS JOB
-  // -----------------------------
   useEffect(() => {
     async function loadData() {
       try {
-        // 1️⃣ Load job details
         const jobRes = await API.get(`/jobs/${jobId}`);
         setJob(jobRes.data);
 
-        // 2️⃣ Load all applicants for this job
         const appsRes = await API.get(`/applications/job/${jobId}`);
         setApplicants(appsRes.data);
 
@@ -32,16 +27,31 @@ export default function EmployerApplicants() {
     loadData();
   }, [jobId]);
 
+  // 📧 CONTACT FUNCTION
+  function contactApplicant(applicant) {
+    const subject = encodeURIComponent(
+      `Regarding your application for ${job?.title}`
+    );
+
+    const body = encodeURIComponent(
+      `Hello ${applicant.full_name},\n\n` +
+      `Thank you for applying for the position of "${job?.title}" at ${job?.company}.\n\n` +
+      `We would like to discuss your application further.\n\n` +
+      `Best regards,\n${job?.company}`
+    );
+
+    window.location.href = `mailto:${applicant.email}?subject=${subject}&body=${body}`;
+  }
+
   if (loading)
     return (
       <div className="pt-20 text-center text-gray-600">Loading...</div>
     );
 
   return (
-    <div className="min-h-screen pt-20 bg-gray-50">
+    <div className="min-h-screen pt-20 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="max-w-5xl mx-auto py-12 px-4">
-        
-        {/* Job Title */}
+
         <h2 className="text-3xl font-bold text-gray-800 mb-2">
           Applicants for: {job?.title}
         </h2>
@@ -59,7 +69,7 @@ export default function EmployerApplicants() {
             {applicants.map((app) => (
               <div
                 key={app.application_id}
-                className="bg-white card-shadow rounded-lg p-6"
+                className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition"
               >
                 <h3 className="text-xl font-bold text-gray-800">
                   {app.full_name}
@@ -68,23 +78,28 @@ export default function EmployerApplicants() {
                 <p className="text-gray-600">{app.email}</p>
 
                 <p className="text-gray-500 text-sm mt-1">
-                  Applied on: {new Date(app.applied_date).toLocaleDateString()}
+                  Applied on:{" "}
+                  {new Date(app.applied_date).toLocaleDateString()}
                 </p>
 
                 <div className="mt-4">
-                  <h4 className="font-semibold mb-1">Application Message:</h4>
+                  <h4 className="font-semibold mb-1">
+                    Application Message:
+                  </h4>
                   <p className="text-gray-700 bg-gray-100 p-3 rounded-md">
                     {app.message}
                   </p>
                 </div>
 
-                <div className="mt-4 flex space-x-3">
-                  <a
-                    href={`mailto:${app.email}`}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                <div className="mt-4">
+                  <button
+                    onClick={() => contactApplicant(app)}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 
+                               text-white px-5 py-2 rounded-lg shadow 
+                               hover:scale-105 transition"
                   >
-                    Contact Applicant
-                  </a>
+                    📧 Contact Applicant
+                  </button>
                 </div>
               </div>
             ))}

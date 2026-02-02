@@ -14,8 +14,12 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "mysql2": "^3.15.3",
+    "natural": "^8.1.0",
     "nodemailer": "^7.0.10",
-    "pdf-parse": "^2.4.5"
+    "openai": "^6.16.0",
+    "pdf-parse": "^1.1.1",
+    "pdfkit": "^0.17.2",
+    "stopword": "^3.1.5"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"

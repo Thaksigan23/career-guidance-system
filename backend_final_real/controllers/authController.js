@@ -3,22 +3,25 @@ import jwt from "jsonwebtoken";
 import { db } from "../config/db.js";
 
 // ---------------------------------------
-// REGISTER
+// REGISTER  ✅ FIXED
 // ---------------------------------------
 export const register = (req, res) => {
-  const { name, email, password, role, phone } = req.body;
+  const { full_name, email, password, role, phone } = req.body;
 
-  if (!email || !password || !name)
-    return res.status(400).json({ error: "Name, email, and password required" });
+  if (!email || !password || !full_name)
+    return res
+      .status(400)
+      .json({ error: "Full name, email, and password required" });
 
   const hashed = bcrypt.hashSync(password, 10);
 
+  // ✅ FIXED: full_name column
   const sql = `
-    INSERT INTO users (name, email, password, phone, role)
+    INSERT INTO users (full_name, email, password, phone, role)
     VALUES (?, ?, ?, ?, ?)
   `;
 
-  db.query(sql, [name, email, hashed, phone, role], (err, result) => {
+  db.query(sql, [full_name, email, hashed, phone || null, role], (err, result) => {
     if (err) {
       if (err.code === "ER_DUP_ENTRY") {
         return res.status(400).json({ error: "Email already exists" });
@@ -34,7 +37,7 @@ export const register = (req, res) => {
 };
 
 // ---------------------------------------
-// LOGIN
+// LOGIN  ✅ FIXED
 // ---------------------------------------
 export const login = (req, res) => {
   const { email, password } = req.body;
@@ -49,8 +52,16 @@ export const login = (req, res) => {
 
     const user = rows[0];
 
+    // ❌ BLOCKED USER CHECK (IMPORTANT)
+    if (user.status === "blocked") {
+      return res.status(403).json({
+        error: "Your account has been blocked by admin",
+      });
+    }
+
     const match = bcrypt.compareSync(password, user.password);
-    if (!match) return res.status(400).json({ error: "Invalid password" });
+    if (!match)
+      return res.status(400).json({ error: "Invalid password" });
 
     // Create token
     const token = jwt.sign(
@@ -67,10 +78,11 @@ export const login = (req, res) => {
       token,
       user: {
         id: user.id,
-        name: user.name,
+        full_name: user.full_name,
         email: user.email,
         phone: user.phone,
         role: user.role,
+        status: user.status, // optional but useful
       },
     });
   });

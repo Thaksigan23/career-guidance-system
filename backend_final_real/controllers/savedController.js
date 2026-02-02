@@ -1,8 +1,8 @@
 import { db } from "../config/db.js";
 
-// -----------------------------------------------------------
-// SAVE A JOB
-// -----------------------------------------------------------
+/* ===========================
+   SAVE A JOB
+=========================== */
 export const saveJob = (req, res) => {
   const user_id = req.user.id;
   const { job_id } = req.body;
@@ -12,7 +12,7 @@ export const saveJob = (req, res) => {
   }
 
   const checkSql = `
-    SELECT * FROM saved_jobs 
+    SELECT id FROM saved_jobs
     WHERE user_id = ? AND job_id = ?
   `;
 
@@ -23,31 +23,30 @@ export const saveJob = (req, res) => {
       return res.json({ message: "Already saved" });
     }
 
-    const sql = `
+    const insertSql = `
       INSERT INTO saved_jobs (user_id, job_id)
       VALUES (?, ?)
     `;
 
-    db.query(sql, [user_id, job_id], (err, result) => {
+    db.query(insertSql, [user_id, job_id], (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
 
       res.json({
         message: "Job saved!",
-        id: result.insertId,
+        saved_id: result.insertId,
       });
     });
   });
 };
 
-
-// -----------------------------------------------------------
-// GET SAVED JOBS  (FIXED VERSION)
-// -----------------------------------------------------------
+/* ===========================
+   GET SAVED JOBS ✅
+=========================== */
 export const getSavedJobs = (req, res) => {
   const user_id = req.user.id;
 
   const sql = `
-    SELECT 
+    SELECT
       s.id AS saved_id,
       j.id AS job_id,
       j.title,
@@ -63,26 +62,28 @@ export const getSavedJobs = (req, res) => {
 
   db.query(sql, [user_id], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
-
     res.json(rows);
   });
 };
 
-
-// -----------------------------------------------------------
-// REMOVE SAVED JOB  (FIXED VERSION)
-// -----------------------------------------------------------
+/* ===========================
+   REMOVE SAVED JOB ✅ FIXED
+=========================== */
 export const removeSavedJob = (req, res) => {
   const user_id = req.user.id;
-  const { saved_id } = req.params;
+  const { id } = req.params; // ✅ FIXED
 
   const sql = `
     DELETE FROM saved_jobs
     WHERE id = ? AND user_id = ?
   `;
 
-  db.query(sql, [saved_id, user_id], (err, result) => {
+  db.query(sql, [id, user_id], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Saved job not found" });
+    }
 
     res.json({ message: "Removed from saved jobs" });
   });
