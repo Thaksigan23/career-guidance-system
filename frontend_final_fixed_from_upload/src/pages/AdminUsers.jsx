@@ -6,8 +6,10 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // 🔁 LOAD USERS
-  async function fetchUsers() {
+  // ===============================
+  // LOAD USERS
+  // ===============================
+  const fetchUsers = async () => {
     try {
       const res = await API.get("/admin/users", {
         headers: {
@@ -15,49 +17,57 @@ export default function AdminUsers() {
         },
       });
       setUsers(res.data || []);
-    } catch {
+    } catch (err) {
       setError("Failed to load users");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  // 🔒 BLOCK USER
-  async function blockUser(id) {
+  // ===============================
+  // ACTIONS
+  // ===============================
+  const blockUser = async (id) => {
     if (!window.confirm("Block this user?")) return;
 
     try {
-      await API.put(`/admin/users/${id}/block`, {}, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      await API.put(
+        `/admin/users/${id}/block`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
       fetchUsers();
     } catch {
       alert("Failed to block user");
     }
-  }
+  };
 
-  // 🔓 UNBLOCK USER
-  async function unblockUser(id) {
+  const unblockUser = async (id) => {
     try {
-      await API.put(`/admin/users/${id}/unblock`, {}, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      await API.put(
+        `/admin/users/${id}/unblock`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
       fetchUsers();
     } catch {
       alert("Failed to unblock user");
     }
-  }
+  };
 
-  // ❌ DELETE USER
-  async function deleteUser(id) {
+  const deleteUser = async (id) => {
     if (!window.confirm("This will permanently delete the user. Continue?"))
       return;
 
@@ -71,20 +81,24 @@ export default function AdminUsers() {
     } catch {
       alert("Failed to delete user");
     }
-  }
+  };
 
-  // 🦴 SKELETON ROW
+  // ===============================
+  // SKELETON ROW
+  // ===============================
   const SkeletonRow = () => (
     <tr className="animate-pulse">
-      <td className="p-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
-      <td className="p-4"><div className="h-4 bg-gray-200 rounded w-40"></div></td>
-      <td className="p-4"><div className="h-6 bg-gray-200 rounded w-20"></div></td>
-      <td className="p-4"><div className="h-6 bg-gray-200 rounded w-20"></div></td>
-      <td className="p-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
-      <td className="p-4"><div className="h-8 bg-gray-200 rounded w-32"></div></td>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <td key={i} className="p-4">
+          <div className="h-4 bg-gray-200 rounded w-full"></div>
+        </td>
+      ))}
     </tr>
   );
 
+  // ===============================
+  // LOADING STATE
+  // ===============================
   if (loading) {
     return (
       <div className="min-h-screen pt-24 bg-gradient-to-br from-slate-100 to-slate-200 px-4">
@@ -101,6 +115,9 @@ export default function AdminUsers() {
     );
   }
 
+  // ===============================
+  // ERROR STATE
+  // ===============================
   if (error) {
     return (
       <div className="pt-24 text-center text-red-600 text-lg">
@@ -109,6 +126,9 @@ export default function AdminUsers() {
     );
   }
 
+  // ===============================
+  // UI
+  // ===============================
   return (
     <div className="min-h-screen pt-24 bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 px-4">
       <div className="max-w-6xl mx-auto">
@@ -119,7 +139,7 @@ export default function AdminUsers() {
             Admin – Manage Users
           </h1>
           <p className="text-gray-600 mt-1">
-            Control platform users, roles and access
+            Freeze or activate user accounts
           </p>
         </div>
 
@@ -154,11 +174,8 @@ export default function AdminUsers() {
                       {user.full_name || "—"}
                     </td>
 
-                    <td className="p-4 text-gray-600">
-                      {user.email}
-                    </td>
+                    <td className="p-4 text-gray-600">{user.email}</td>
 
-                    {/* ROLE */}
                     <td className="p-4">
                       <span
                         className={`px-4 py-1 rounded-full text-sm font-semibold
@@ -174,7 +191,6 @@ export default function AdminUsers() {
                       </span>
                     </td>
 
-                    {/* STATUS */}
                     <td className="p-4">
                       <span
                         className={`px-4 py-1 rounded-full text-sm font-semibold
@@ -197,22 +213,22 @@ export default function AdminUsers() {
                       {user.status === "active" ? (
                         <button
                           onClick={() => blockUser(user.id)}
-                          className="bg-yellow-500 text-white px-4 py-1 rounded-lg hover:bg-yellow-600 transition"
+                          className="bg-red-500 text-white px-4 py-1 rounded-lg hover:bg-red-600"
                         >
-                          Block
+                          🔒 Block
                         </button>
                       ) : (
                         <button
                           onClick={() => unblockUser(user.id)}
-                          className="bg-green-600 text-white px-4 py-1 rounded-lg hover:bg-green-700 transition"
+                          className="bg-green-600 text-white px-4 py-1 rounded-lg hover:bg-green-700"
                         >
-                          Unblock
+                          🔓 Unblock
                         </button>
                       )}
 
                       <button
                         onClick={() => deleteUser(user.id)}
-                        className="bg-red-600 text-white px-4 py-1 rounded-lg hover:bg-red-700 transition"
+                        className="bg-gray-600 text-white px-4 py-1 rounded-lg hover:bg-gray-700"
                       >
                         Delete
                       </button>

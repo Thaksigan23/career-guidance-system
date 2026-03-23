@@ -5,7 +5,7 @@ import { db } from "../config/db.js";
 // -------------------------------
 export const getAllUsers = (req, res) => {
   const sql = `
-    SELECT id, full_name, email, role, phone
+    SELECT id, full_name, email, role, phone, status, created_at
     FROM users
     ORDER BY created_at DESC
   `;
@@ -15,6 +15,7 @@ export const getAllUsers = (req, res) => {
     res.json(rows);
   });
 };
+
 
 // -------------------------------
 // ACTIVATE / DEACTIVATE USER

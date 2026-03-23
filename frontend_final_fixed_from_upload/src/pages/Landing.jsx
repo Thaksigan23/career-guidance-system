@@ -10,7 +10,7 @@ export default function Landing() {
           Welcome to Your Career Journey
         </h1>
 
-        <p className="text-xl mb-12 opacity-90">
+        <p className="text-xl mb-12 opacity-90" >
           Find your dream career path with our comprehensive guidance platform
         </p>
 

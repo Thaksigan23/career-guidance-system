@@ -65,13 +65,19 @@ export default function ProfileView() {
           <div className="grid md:grid-cols-2 gap-6 mb-8">
 
             <div className="info-box">
-              <p className="label">Phone</p>
+              <p className="label">📞 Phone</p>
               <p className="value">{profile.phone || "Not provided"}</p>
             </div>
 
             <div className="info-box">
-              <p className="label">Education</p>
+              <p className="label">🏫 Education</p>
               <p className="value">{profile.education || "Not provided"}</p>
+            </div>
+
+            {/* ✅ DEGREE ADDED */}
+            <div className="info-box">
+              <p className="label">🎓 Degree</p>
+              <p className="value">{profile.degree || "Not provided"}</p>
             </div>
 
           </div>
@@ -108,7 +114,9 @@ export default function ProfileView() {
           <div className="text-center">
             <button
               onClick={() => (window.location.href = "/student-profile")}
-              className="bg-gradient-to-r from-indigo-500 to-green-400 text-white font-bold px-8 py-3 rounded-full shadow-lg hover:scale-105 transition"
+              className="bg-gradient-to-r from-indigo-500 to-green-400 
+                         text-white font-bold px-8 py-3 rounded-full 
+                         shadow-lg hover:scale-105 transition"
             >
               ✏️ Edit Profile
             </button>

@@ -2,73 +2,95 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { db } from "../config/db.js";
 
+
 // ---------------------------------------
-// REGISTER  ✅ FIXED
+// REGISTER
 // ---------------------------------------
 export const register = (req, res) => {
   const { full_name, email, password, role, phone } = req.body;
 
-  if (!email || !password || !full_name)
-    return res
-      .status(400)
-      .json({ error: "Full name, email, and password required" });
+  if (!full_name || !email || !password) {
+    return res.status(400).json({
+      error: "Full name, email, and password are required",
+    });
+  }
 
-  const hashed = bcrypt.hashSync(password, 10);
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
-  // ✅ FIXED: full_name column
+  // ✅ Always set status = 'active' explicitly
   const sql = `
-    INSERT INTO users (full_name, email, password, phone, role)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO users (full_name, email, password, phone, role, status)
+    VALUES (?, ?, ?, ?, ?, 'active')
   `;
 
-  db.query(sql, [full_name, email, hashed, phone || null, role], (err, result) => {
-    if (err) {
-      if (err.code === "ER_DUP_ENTRY") {
-        return res.status(400).json({ error: "Email already exists" });
+  db.query(
+    sql,
+    [full_name, email, hashedPassword, phone || null, role || "student"],
+    (err, result) => {
+      if (err) {
+        if (err.code === "ER_DUP_ENTRY") {
+          return res.status(400).json({
+            error: "Email already exists",
+          });
+        }
+        return res.status(500).json({ error: err.message });
       }
-      return res.status(500).json({ error: err.message });
-    }
 
-    res.json({
-      message: "User registered successfully",
-      id: result.insertId,
-    });
-  });
+      res.status(201).json({
+        message: "User registered successfully",
+        id: result.insertId,
+      });
+    }
+  );
 };
 
+
 // ---------------------------------------
-// LOGIN  ✅ FIXED
+// LOGIN
 // ---------------------------------------
 export const login = (req, res) => {
   const { email, password } = req.body;
 
-  const sql = "SELECT * FROM users WHERE email = ?";
+  if (!email || !password) {
+    return res.status(400).json({
+      error: "Email and password are required",
+    });
+  }
+
+  const sql = `SELECT * FROM users WHERE email = ?`;
 
   db.query(sql, [email], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
 
-    if (rows.length === 0)
-      return res.status(400).json({ error: "User not found" });
+    if (rows.length === 0) {
+      return res.status(400).json({
+        error: "User not found",
+      });
+    }
 
     const user = rows[0];
 
-    // ❌ BLOCKED USER CHECK (IMPORTANT)
+    // 🚫 BLOCKED USER CHECK (CRITICAL)
     if (user.status === "blocked") {
       return res.status(403).json({
         error: "Your account has been blocked by admin",
       });
     }
 
-    const match = bcrypt.compareSync(password, user.password);
-    if (!match)
-      return res.status(400).json({ error: "Invalid password" });
+    const isMatch = bcrypt.compareSync(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({
+        error: "Invalid password",
+      });
+    }
 
-    // Create token
+    // ✅ Include status in token (optional but useful)
     const token = jwt.sign(
       {
         id: user.id,
         email: user.email,
         role: user.role,
+        status: user.status,
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
@@ -82,7 +104,7 @@ export const login = (req, res) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
-        status: user.status, // optional but useful
+        status: user.status,
       },
     });
   });
