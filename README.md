@@ -18,8 +18,10 @@ A full-stack web application that helps users get career recommendations based o
 
 ```
 final/
- ├── frontend/   # React / UI part
- └── backend/    # Node.js + Express API
+ ├── frontend_final_fixed_from_upload/   # React app
+ ├── backend_final_real/                 # Express + MySQL API
+ ├── setup-local-db.ps1                  # Initialize local DB (Windows)
+ └── start-local.ps1                     # Start DB + backend + frontend
 ```
 
 ---
@@ -58,7 +60,7 @@ cd career-guidance-system
 ### 2️⃣ Backend Setup
 
 ```
-cd backend
+cd backend_final_real
 npm install
 npm start
 ```
@@ -71,27 +73,34 @@ npm start
 ### 3️⃣ Frontend Setup
 
 ```
-cd frontend
+cd frontend_final_fixed_from_upload
 npm install
-npm start
+npm run dev
 ```
 
 ---
 
 ## 🗄️ Database Setup
 
-* Create a MySQL database
-* Import SQL file (if available)
-* Update DB credentials in backend
+* Create a MySQL database named `career_platform`
+* Import `backend_final_real/schema.sql`
+* Update backend `.env` (or use `.env.example` as template)
 
 Example:
 
 ```
-DB_HOST=localhost
+DB_HOST=127.0.0.1
 DB_USER=root
 DB_PASSWORD=
-DB_NAME=career_guidance
-DB_PORT=3306
+DB_NAME=career_platform
+DB_PORT=3308
+```
+
+### Local one-command startup (Windows)
+
+```powershell
+.\setup-local-db.ps1
+.\start-local.ps1
 ```
 
 ---

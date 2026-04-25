@@ -1,27 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useApp } from "../context/AppContext.jsx";
 import "./navbar.css";
 
 export default function NavBar() {
+  const { user, logout: appLogout } = useApp();
   const [open, setOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [user, setUser] = useState(null);
   const navigate = useNavigate();
-
-  // Load user from localStorage
-  useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      } else {
-        setUser(null);
-      }
-    } catch (err) {
-      console.error("Failed to parse user", err);
-      setUser(null);
-    }
-  }, []);
 
   const avatarUrl = user
     ? `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -30,10 +16,8 @@ export default function NavBar() {
     : null;
 
   const logout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    setUser(null);
-    navigate("/login"); // ✅ SPA navigation ONLY
+    appLogout();
+    navigate("/login");
   };
 
   return (

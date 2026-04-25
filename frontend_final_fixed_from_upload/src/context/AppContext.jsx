@@ -3,25 +3,43 @@ import { createContext, useContext, useEffect, useState } from "react";
 // Create context
 const AppContext = createContext();
 
+function loadUserFromStorage() {
+  try {
+    const primary = localStorage.getItem("user");
+    if (primary) return JSON.parse(primary);
+    const legacy = localStorage.getItem("currentUser");
+    if (legacy) {
+      localStorage.setItem("user", legacy);
+      localStorage.removeItem("currentUser");
+      return JSON.parse(legacy);
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+function loadJobsFromStorage() {
+  try {
+    const raw = localStorage.getItem("jobs");
+    if (!raw) return [];
+    return JSON.parse(raw) || [];
+  } catch {
+    return [];
+  }
+}
+
 /* =========================
    MAIN PROVIDER
 ========================= */
 export const AppProvider = ({ children }) => {
-  // GLOBAL USER (includes token)
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => loadUserFromStorage());
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [jobs, setJobs] = useState(() => loadJobsFromStorage());
 
-  // GLOBAL JOBS
-  const [jobs, setJobs] = useState([]);
-
-  /* =========================
-     LOAD FROM LOCAL STORAGE
-  ========================= */
+  /* Drop legacy key if anything still wrote it */
   useEffect(() => {
-    const savedUser = JSON.parse(localStorage.getItem("currentUser"));
-    const savedJobs = JSON.parse(localStorage.getItem("jobs")) || [];
-
-    if (savedUser) setUser(savedUser);
-    if (savedJobs) setJobs(savedJobs);
+    localStorage.removeItem("currentUser");
   }, []);
 
   /* =========================
@@ -29,7 +47,7 @@ export const AppProvider = ({ children }) => {
   ========================= */
   useEffect(() => {
     if (user) {
-      localStorage.setItem("currentUser", JSON.stringify(user));
+      localStorage.setItem("user", JSON.stringify(user));
     }
   }, [user]);
 
@@ -42,10 +60,14 @@ export const AppProvider = ({ children }) => {
   ========================= */
   const login = (userData) => {
     setUser(userData);
+    setToken(localStorage.getItem("token"));
   };
 
   const logout = () => {
     setUser(null);
+    setToken(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
     localStorage.removeItem("currentUser");
   };
 
@@ -60,7 +82,7 @@ export const AppProvider = ({ children }) => {
     <AppContext.Provider
       value={{
         user,
-        token: user?.token, // ⭐ important
+        token,
         jobs,
         login,
         logout,

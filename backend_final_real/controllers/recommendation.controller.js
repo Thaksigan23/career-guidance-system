@@ -86,12 +86,6 @@ export const getRecommendations = (req, res) => {
               matchScore: score
             };
           });
-console.log("STUDENT SKILLS:", studentSkills);
-
-jobs.forEach(job => {
-  console.log("JOB:", job.title);
-  console.log("REQUIREMENTS:", job.requirements);
-});
 
           // 3️⃣ Filter & sort
           const finalJobs = recommendedJobs

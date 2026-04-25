@@ -27,7 +27,6 @@ import ProfileView from "./pages/ProfileView";
 import CVAnalysis from "./pages/CVAnalysis";
 import CVHistory from "./pages/CVHistory";
 import CareerPath from "./pages/CareerPath";
-import { Navigate } from "react-router-dom";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminJobs from "./pages/AdminJobs";

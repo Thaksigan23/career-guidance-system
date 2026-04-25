@@ -10,6 +10,7 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     phone VARCHAR(20),
     role ENUM('student', 'employer', 'admin') NOT NULL,
+    status ENUM('active', 'blocked') NOT NULL DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -39,6 +40,7 @@ CREATE TABLE jobs (
     salary VARCHAR(255),
     description TEXT,
     requirements TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (employer_id) REFERENCES users(id) ON DELETE CASCADE
 );

@@ -20,7 +20,7 @@ const [message, setMessage] = useState("");
   const handleGetRecommendations = async () => {
     setLoading(true);
     try {
-      const data = await getRecommendations(token);
+      const data = await getRecommendations();
       setJobs(data);
     } catch (error) {
       console.error(error);
