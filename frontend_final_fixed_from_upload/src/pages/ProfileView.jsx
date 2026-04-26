@@ -36,6 +36,9 @@ export default function ProfileView() {
   const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
     profile.full_name || "User"
   )}&background=6366F1&color=fff&size=128&rounded=true`;
+  const cvLink = profile.cv_url
+    ? `${import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, "") || "http://localhost:5000"}${profile.cv_url}`
+    : "";
 
   return (
     <div className="min-h-screen pt-24 bg-gradient-to-br from-indigo-50 to-blue-100 px-4">
@@ -108,6 +111,23 @@ export default function ProfileView() {
             <p className="text-gray-700 whitespace-pre-line">
               {profile.experience || "No experience added"}
             </p>
+          </div>
+
+          {/* CV */}
+          <div className="mb-10">
+            <h3 className="section-title">CV / Resume</h3>
+            {cvLink ? (
+              <a
+                href={cvLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-block bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition"
+              >
+                View Uploaded CV
+              </a>
+            ) : (
+              <p className="text-gray-500">No CV uploaded</p>
+            )}
           </div>
 
           {/* ACTION */}

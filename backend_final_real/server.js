@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
 dotenv.config();
 
 import authRoutes from "./routes/auth.js";
@@ -34,6 +35,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 app.use("/api/cv", cvRoutes);
 app.use("/api/career", careerRoutes);
 

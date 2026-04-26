@@ -14,6 +14,9 @@ export default function StudentProfile() {
   });
 
   const [loading, setLoading] = useState(true);
+  const [cvUrl, setCvUrl] = useState("");
+  const [cvFile, setCvFile] = useState(null);
+  const [cvUploading, setCvUploading] = useState(false);
 
   // 🔁 LOAD STUDENT PROFILE
   useEffect(() => {
@@ -37,6 +40,7 @@ export default function StudentProfile() {
           skills: data.skills || "",
           experience: data.experience || "",
         });
+        setCvUrl(data.cv_url || "");
       } catch (err) {
         console.error("Profile load error:", err.response?.data || err.message);
       } finally {
@@ -50,6 +54,10 @@ export default function StudentProfile() {
   // ✏️ HANDLE INPUT
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
+  }
+
+  function handleCVSelect(e) {
+    setCvFile(e.target.files?.[0] || null);
   }
 
   // 💾 SAVE PROFILE
@@ -70,6 +78,55 @@ export default function StudentProfile() {
       alert("Failed to save profile");
     }
   }
+
+  async function handleUploadCV() {
+    if (!cvFile) {
+      alert("Please choose a CV file first.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("cv", cvFile);
+
+    try {
+      setCvUploading(true);
+      const res = await API.post("/students/me/cv", formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      setCvUrl(res.data.cv_url || "");
+      setCvFile(null);
+      alert("CV uploaded successfully!");
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to upload CV");
+    } finally {
+      setCvUploading(false);
+    }
+  }
+
+  async function handleDeleteCV() {
+    if (!window.confirm("Delete your uploaded CV?")) return;
+    try {
+      await API.delete("/students/me/cv", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setCvUrl("");
+      setCvFile(null);
+      alert("CV deleted successfully!");
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to delete CV");
+    }
+  }
+
+  const cvLink = cvUrl
+    ? `${import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, "") || "http://localhost:5000"}${cvUrl}`
+    : "";
 
   if (loading) {
     return (
@@ -204,6 +261,55 @@ export default function StudentProfile() {
                   className="w-full px-4 py-2 border rounded-lg"
                   placeholder="Worked as intern / projects / responsibilities"
                 />
+              </div>
+            </div>
+
+            {/* CV UPLOAD */}
+            <div className="mb-10">
+              <h3 className="text-2xl font-bold text-indigo-600 mb-4">
+                📄 CV / Resume
+              </h3>
+              <p className="text-sm text-gray-500 mb-3">
+                Upload PDF, DOC, or DOCX up to 5MB.
+              </p>
+
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={handleCVSelect}
+                className="w-full px-4 py-2 border rounded-lg mb-4 bg-white"
+              />
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={handleUploadCV}
+                  disabled={cvUploading}
+                  className="bg-indigo-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-indigo-700 transition disabled:opacity-60"
+                >
+                  {cvUploading ? "Uploading..." : "Upload CV"}
+                </button>
+
+                {cvLink && (
+                  <a
+                    href={cvLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="bg-emerald-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-emerald-700 transition"
+                  >
+                    View Current CV
+                  </a>
+                )}
+
+                {cvLink && (
+                  <button
+                    type="button"
+                    onClick={handleDeleteCV}
+                    className="bg-red-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-red-700 transition"
+                  >
+                    Delete CV
+                  </button>
+                )}
               </div>
             </div>
 

@@ -18,8 +18,11 @@ CREATE TABLE student_profiles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     education VARCHAR(255),
+    degree VARCHAR(255),
+    experience_years INT,
     skills TEXT,
     experience TEXT,
+    cv_path VARCHAR(255),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
