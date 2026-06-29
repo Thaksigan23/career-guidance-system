@@ -28,6 +28,7 @@ import {
   sendConnectionRequest,
 } from "../api/api";
 import { useApp } from "../context/AppContext.jsx";
+import HomeInsights from "../components/HomeInsights";
 
 function timeAgo(dateStr) {
   const d = new Date(dateStr);
@@ -213,8 +214,11 @@ export default function Feed() {
           </div>
         </aside>
 
-        {/* CENTER: composer + feed */}
+        {/* CENTER: insights + composer + feed */}
         <div className="min-w-0">
+          {/* MATCH / HIRING INSIGHTS GRAPH */}
+          <HomeInsights role={role} />
+
           {/* COMPOSER */}
           <form onSubmit={handlePost} className="panel p-5 mb-6">
             <div className="flex gap-3">

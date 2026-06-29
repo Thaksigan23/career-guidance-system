@@ -53,6 +53,14 @@ export const getRecommendations = async () => {
 };
 
 /* ===========================
+   EMPLOYER SUMMARY (insights)
+=========================== */
+export const getEmployerSummary = async () => {
+  const res = await API.get("/employer/summary");
+  return res.data;
+};
+
+/* ===========================
    CAREER PATH (SKILL BASED)
 =========================== */
 export const getCareerPath = async (skills) => {
