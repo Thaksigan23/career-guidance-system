@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import API from "../api/api";
 
 export default function AdminUsers() {
@@ -46,7 +47,7 @@ export default function AdminUsers() {
       );
       fetchUsers();
     } catch {
-      alert("Failed to block user");
+      toast.error("Failed to block user");
     }
   };
 
@@ -63,7 +64,7 @@ export default function AdminUsers() {
       );
       fetchUsers();
     } catch {
-      alert("Failed to unblock user");
+      toast.error("Failed to unblock user");
     }
   };
 
@@ -79,7 +80,7 @@ export default function AdminUsers() {
       });
       fetchUsers();
     } catch {
-      alert("Failed to delete user");
+      toast.error("Failed to delete user");
     }
   };
 

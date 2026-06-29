@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { User, Mail, Lock, Phone, Briefcase, GraduationCap, UserPlus, Sparkles } from "lucide-react";
 import API from "../api/api";
 
 export default function Register() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     full_name: "",
     email: "",
@@ -32,7 +34,8 @@ export default function Register() {
         phone: form.phone,
       });
 
-      window.location.href = "/login";
+      toast.success("Account created! Please log in.");
+      navigate("/login");
     } catch (err) {
       setError(err.response?.data?.error || "Registration failed. Please try again.");
       setLoading(false);

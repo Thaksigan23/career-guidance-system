@@ -11,6 +11,12 @@ A full-stack web application that helps users get career recommendations based o
 * 🧠 Skill-based suggestions
 * 📁 Dashboard with user data
 * 🔗 Frontend + Backend integration
+* 🌐 LinkedIn-style networking:
+  * Rich profiles (headline, about, location, "Open to work" badge)
+  * Experience & education timelines
+  * Connections (send/accept requests, suggestions, network page)
+  * Activity feed with posts, likes and comments
+  * Skill endorsements on public profiles
 
 ---
 
@@ -83,7 +89,7 @@ npm run dev
 ## 🗄️ Database Setup (Supabase)
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. Open **SQL Editor** and run the contents of `backend_final_real/supabase_schema.sql` to create the tables.
+2. Open **SQL Editor** and run the contents of `backend_final_real/supabase_schema.sql` to create the core tables, then run `backend_final_real/social_schema.sql` to add the LinkedIn-style features (connections, posts, endorsements, experience/education timelines).
 3. In **Project Settings → API**, copy the **Project URL** and the **service_role** key.
 4. Add them to `backend_final_real/.env` (use `.env.example` as a template):
 
@@ -165,9 +171,62 @@ dashboard, user management, and job approval pages.
 
 ---
 
-## 📸 Screenshots (Optional)
+## 📸 Screenshots
 
-*Add screenshots of your UI here*
+> Place your image files in `docs/screenshots/` using the names below and they
+> will render automatically here on GitHub.
+
+### 🏠 Landing Page
+
+![Landing page](docs/screenshots/landing.png)
+
+The Aurora Glow landing page with hero section, feature cards, and call-to-action.
+
+### 🔐 Authentication
+
+| Login | Register |
+| ----- | -------- |
+| ![Login page](docs/screenshots/login.png) | ![Register page](docs/screenshots/register.png) |
+
+### 💼 Jobs & Applications
+
+| Job Listings | Job Details |
+| ------------ | ----------- |
+| ![Jobs page](docs/screenshots/jobs.png) | ![Job details](docs/screenshots/job-details.png) |
+
+### 🎓 Student Experience
+
+| Student Profile | CV Analyzer |
+| --------------- | ----------- |
+| ![Student profile](docs/screenshots/student-profile.png) | ![CV analyzer](docs/screenshots/cv-analyzer.png) |
+
+### 🏢 Employer & Admin Dashboards
+
+| Employer Dashboard | Admin Dashboard |
+| ------------------ | --------------- |
+| ![Employer dashboard](docs/screenshots/employer-dashboard.png) | ![Admin dashboard](docs/screenshots/admin-dashboard.png) |
+
+### Demo data for screenshots
+
+Load sample users, jobs, applications, and saved jobs:
+
+```
+cd backend_final_real
+npm run seed:demo
+```
+
+| Role     | Name           | Email                     | Password   |
+| -------- | -------------- | ------------------------- | ---------- |
+| Admin    | System Admin   | `admin@careerguide.com`   | `Admin@123` |
+| Employer | Acme Recruiter | `employer@acme.com`       | `Demo@123` |
+| Employer | TechWave HR    | `hr@techwave.com`         | `Demo@123` |
+| Student  | Jane Doe       | `jane.doe@student.com`    | `Demo@123` |
+| Student  | John Smith     | `john.smith@student.com`  | `Demo@123` |
+| Student  | Priya Kumar    | `priya.k@student.com`     | `Demo@123` |
+
+**What gets seeded:** 6 jobs (4 approved, 2 pending), student profiles with skills, applications, and saved jobs.
+
+> Demo job example: **Senior React Developer** · Acme Corp · Colombo · Rs. 120,000
 
 ---
 

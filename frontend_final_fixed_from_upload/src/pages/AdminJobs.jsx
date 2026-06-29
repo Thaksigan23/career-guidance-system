@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import API from "../api/api";
 
 export default function AdminJobs() {
@@ -40,8 +41,9 @@ export default function AdminJobs() {
           job.id === jobId ? { ...job, status: "approved" } : job
         )
       );
+      toast.success("Job approved");
     } catch {
-      alert("Failed to approve job");
+      toast.error("Failed to approve job");
     }
   }
 
@@ -59,8 +61,9 @@ export default function AdminJobs() {
           job.id === jobId ? { ...job, status: "rejected" } : job
         )
       );
+      toast.success("Job rejected");
     } catch {
-      alert("Failed to reject job");
+      toast.error("Failed to reject job");
     }
   }
 

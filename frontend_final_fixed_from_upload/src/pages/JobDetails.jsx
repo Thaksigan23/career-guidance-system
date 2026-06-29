@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import API from "../api/api";
 
 export default function JobDetails() {
@@ -27,14 +28,14 @@ export default function JobDetails() {
   // ------------------------------
   async function applyJob() {
     try {
-      await API.post("/applications/apply", {
+      await API.post("/applications", {
         job_id: id,
         message: "I am applying for this job.",
       });
-      alert("Application submitted!");
+      toast.success("Application submitted!");
     } catch (error) {
       console.error(error);
-      alert("Failed to apply.");
+      toast.error("Failed to apply.");
     }
   }
 
@@ -43,11 +44,11 @@ export default function JobDetails() {
   // ------------------------------
   async function saveJob() {
     try {
-      await API.post("/saved/save", { job_id: id });
-      alert("Job saved!");
+      await API.post("/saved", { job_id: id });
+      toast.success("Job saved!");
     } catch (error) {
       console.error(error);
-      alert("Error saving job");
+      toast.error("Error saving job");
     }
   }
 

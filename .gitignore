@@ -8,6 +8,13 @@ build/
 # Local runtime/database artifacts
 backend_final_real/.local-mysql-data/
 
+# Uploaded user files (CVs, etc.) — never commit user data
+backend_final_real/uploads/*
+!backend_final_real/uploads/.gitkeep
+!backend_final_real/uploads/cvs/
+backend_final_real/uploads/cvs/*
+!backend_final_real/uploads/cvs/cvUpload.js
+
 # OS/editor noise
 .DS_Store
 Thumbs.db

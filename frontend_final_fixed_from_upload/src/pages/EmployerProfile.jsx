@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import API from "../api/api";
 
 export default function EmployerProfile() {
@@ -29,7 +30,7 @@ export default function EmployerProfile() {
 
       } catch (err) {
         console.log("Error loading employer profile:", err);
-        alert("Failed to load employer profile. Please log in again.");
+        toast.error("Failed to load employer profile. Please log in again.");
       }
 
       setLoading(false);
@@ -49,10 +50,10 @@ export default function EmployerProfile() {
 
     try {
       await API.post("/employers/me", form);
-      alert("Profile updated successfully!");
+      toast.success("Profile updated successfully!");
     } catch (err) {
       console.log(err);
-      alert("Failed to update employer profile");
+      toast.error("Failed to update employer profile");
     }
   }
 

@@ -1,11 +1,13 @@
 import { supabase } from "../config/db.js";
+import { validateJob } from "../utils/validators.js";
 
 export const postJob = async (req, res) => {
   const employerId = req.user.id; // from JWT
   const { title, company, location, salary, description, requirements } = req.body;
 
-  if (!title) {
-    return res.status(400).json({ error: "Job title is required" });
+  const validationErrors = validateJob({ title, description, requirements });
+  if (validationErrors.length > 0) {
+    return res.status(400).json({ error: validationErrors.join(" ") });
   }
 
   const parsedSalary =

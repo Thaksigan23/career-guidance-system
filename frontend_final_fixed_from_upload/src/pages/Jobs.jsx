@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import API from "../api/api";
 import JobModal from "../components/JobModal";
 import { Link } from "react-router-dom";
@@ -41,18 +42,18 @@ export default function Jobs() {
         job_id: jobId,
         message: "I would like to apply for this job.",
       });
-      alert("Application submitted!");
+      toast.success("Application submitted!");
     } catch {
-      alert("Failed to apply");
+      toast.error("Failed to apply");
     }
   }
 
   async function saveJob(jobId) {
     try {
       await API.post("/saved", { job_id: jobId });
-      alert("Job saved!");
+      toast.success("Job saved!");
     } catch {
-      alert("Failed to save job");
+      toast.error("Failed to save job");
     }
   }
 
@@ -60,14 +61,18 @@ export default function Jobs() {
     try {
       await API.post("/jobs", {
         ...form,
-        salary: form.salary ? Number(form.salary) : null,
+        salary: form.salary ? String(form.salary) : null,
       });
       const { data } = await API.get("/jobs");
       setJobs(data || []);
       setModalOpen(false);
-      alert("Job posted!");
-    } catch {
-      alert("Failed to post job");
+      toast.success("Job posted!");
+    } catch (err) {
+      const msg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        "Failed to post job";
+      toast.error(msg);
     }
   }
 

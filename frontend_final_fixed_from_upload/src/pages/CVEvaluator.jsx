@@ -1,4 +1,5 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function CVEvaluator() {
   const [cvText, setCvText] = useState("");
@@ -6,7 +7,7 @@ export default function CVEvaluator() {
 
   function analyzeCV() {
     if (!cvText.trim()) {
-      alert("Please paste your CV content first.");
+      toast.error("Please paste your CV content first.");
       return;
     }
 

@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { supabase } from "../config/db.js";
+import { validateRegister, validateLogin } from "../utils/validators.js";
 
 // ---------------------------------------
 // REGISTER
@@ -8,22 +9,24 @@ import { supabase } from "../config/db.js";
 export const register = async (req, res) => {
   const { full_name, email, password, role, phone } = req.body;
 
-  if (!full_name || !email || !password) {
-    return res.status(400).json({
-      error: "Full name, email, and password are required",
-    });
+  const validationErrors = validateRegister({ full_name, email, password, role });
+  if (validationErrors.length > 0) {
+    return res.status(400).json({ error: validationErrors.join(" ") });
   }
+
+  // Prevent self-registration as admin via the public endpoint.
+  const safeRole = role === "employer" ? "employer" : "student";
 
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   const { data, error } = await supabase
     .from("users")
     .insert({
-      full_name,
-      email,
+      full_name: full_name.trim(),
+      email: email.trim().toLowerCase(),
       password: hashedPassword,
       phone: phone || null,
-      role: role || "student",
+      role: safeRole,
       status: "active",
     })
     .select("id")
@@ -49,16 +52,15 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({
-      error: "Email and password are required",
-    });
+  const validationErrors = validateLogin({ email, password });
+  if (validationErrors.length > 0) {
+    return res.status(400).json({ error: validationErrors.join(" ") });
   }
 
   const { data: user, error } = await supabase
     .from("users")
     .select("*")
-    .eq("email", email)
+    .eq("email", email.trim().toLowerCase())
     .maybeSingle();
 
   if (error) return res.status(500).json({ error: error.message });

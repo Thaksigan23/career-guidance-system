@@ -1,4 +1,5 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 import API from "../api/api";
 
 export default function PostJob() {
@@ -19,8 +20,8 @@ export default function PostJob() {
     e.preventDefault();
 
     try {
-      await API.post("/jobs/post", form);
-      alert("Job posted successfully!");
+      await API.post("/jobs", form);
+      toast.success("Job posted successfully!");
 
       // Clear form after posting
       setForm({
@@ -34,7 +35,7 @@ export default function PostJob() {
 
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.error || "Failed to post job");
+      toast.error(err.response?.data?.error || "Failed to post job");
     }
   }
 

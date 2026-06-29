@@ -1,49 +1,77 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   Mail,
   Phone,
   MapPin,
+  Briefcase,
   GraduationCap,
   Building2,
-  Briefcase,
-  FileText,
-  Pencil,
   Sparkles,
-  Download,
-  Users,
   ThumbsUp,
+  UserPlus,
+  UserCheck,
+  Clock,
+  Users,
+  FileText,
+  Download,
   BadgeCheck,
-  ExternalLink,
 } from "lucide-react";
-import { getPublicProfile } from "../api/api";
-import { useApp } from "../context/AppContext.jsx";
+import {
+  getPublicProfile,
+  getConnectionStatus,
+  sendConnectionRequest,
+  respondConnection,
+  endorseSkill,
+  removeEndorsement,
+} from "../api/api";
 
-export default function ProfileView() {
+function avatar(name, size = 160) {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    name || "User"
+  )}&background=8B5CF6&color=fff&size=${size}&rounded=true&bold=true`;
+}
+
+function timeAgo(dateStr) {
+  const d = new Date(dateStr);
+  const secs = Math.floor((Date.now() - d.getTime()) / 1000);
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${Math.max(mins, 1)}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return d.toLocaleDateString();
+}
+
+export default function PublicProfile() {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useApp();
   const [profile, setProfile] = useState(null);
+  const [conn, setConn] = useState({ status: "none" });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const data = await getPublicProfile(user.id);
-        setProfile(data);
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to load profile");
-      } finally {
-        setLoading(false);
-      }
+  async function load() {
+    try {
+      const [p, c] = await Promise.all([
+        getPublicProfile(id),
+        getConnectionStatus(id),
+      ]);
+      setProfile(p);
+      setConn(c);
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to load profile");
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
+    setLoading(true);
     load();
-  }, [user?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   if (loading) {
     return (
@@ -56,16 +84,15 @@ export default function ProfileView() {
   if (!profile) {
     return (
       <div className="aurora-page text-center text-slate-400 text-lg">
-        Could not load your profile.
+        Profile not found.
       </div>
     );
   }
 
   const isStudent = profile.role === "student";
-
-  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    profile.full_name || "User"
-  )}&background=8B5CF6&color=fff&size=160&rounded=true&bold=true`;
+  const skills = profile.skills
+    ? profile.skills.split(",").map((s) => s.trim()).filter(Boolean)
+    : [];
 
   const cvLink = profile.cv_url
     ? `${
@@ -74,9 +101,93 @@ export default function ProfileView() {
       }${profile.cv_url}`
     : "";
 
-  const skills = profile.skills
-    ? profile.skills.split(",").map((s) => s.trim()).filter(Boolean)
-    : [];
+  async function handleConnect() {
+    try {
+      await sendConnectionRequest(id);
+      setConn({ status: "pending_outgoing" });
+      toast.success("Connection request sent");
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Could not connect");
+    }
+  }
+
+  async function handleAccept() {
+    try {
+      await respondConnection(conn.connection_id, "accept");
+      setConn({ status: "connected" });
+      toast.success("Connection accepted");
+      load();
+    } catch {
+      toast.error("Action failed");
+    }
+  }
+
+  async function toggleEndorse(skill) {
+    const current = profile.endorsements[skill] || { count: 0, mine: false };
+    const next = !current.mine;
+    setProfile((prev) => ({
+      ...prev,
+      endorsements: {
+        ...prev.endorsements,
+        [skill]: {
+          count: current.count + (next ? 1 : -1),
+          mine: next,
+        },
+      },
+    }));
+    try {
+      if (next) await endorseSkill(id, skill);
+      else await removeEndorsement(id, skill);
+    } catch {
+      toast.error("Action failed");
+      load();
+    }
+  }
+
+  function ConnectButton() {
+    if (conn.status === "self") {
+      return (
+        <button
+          onClick={() => navigate("/profile")}
+          className="btn-soft inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold"
+        >
+          View as me
+        </button>
+      );
+    }
+    if (conn.status === "connected") {
+      return (
+        <span className="badge badge-green px-4 py-2 text-sm">
+          <UserCheck size={15} /> Connected
+        </span>
+      );
+    }
+    if (conn.status === "pending_outgoing") {
+      return (
+        <span className="badge badge-yellow px-4 py-2 text-sm">
+          <Clock size={15} /> Request pending
+        </span>
+      );
+    }
+    if (conn.status === "pending_incoming") {
+      return (
+        <button
+          onClick={handleAccept}
+          className="btn-glow inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold"
+        >
+          <UserCheck size={16} /> Accept request
+        </button>
+      );
+    }
+    return (
+      <button
+        onClick={handleConnect}
+        className="btn-glow inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold"
+      >
+        <UserPlus size={16} /> Connect
+      </button>
+    );
+  }
 
   return (
     <div className="aurora-page px-4">
@@ -86,12 +197,11 @@ export default function ProfileView() {
           <div className="h-32 bg-gradient-to-r from-cyan-500/30 via-violet-500/30 to-orange-500/20 relative">
             <div className="absolute inset-0 grid-overlay opacity-40" />
           </div>
-
           <div className="px-8 pb-8">
             <div className="flex flex-col md:flex-row md:items-end gap-5 -mt-16">
               <div className="bg-gradient-to-r from-cyan-400 to-violet-500 p-1 rounded-2xl shadow-xl w-fit">
                 <img
-                  src={avatarUrl}
+                  src={avatar(profile.full_name)}
                   alt="Avatar"
                   className="w-32 h-32 rounded-2xl bg-[#0c0a1d]"
                 />
@@ -100,7 +210,7 @@ export default function ProfileView() {
               <div className="flex-1 md:pb-2">
                 <div className="flex flex-wrap items-center gap-3">
                   <h2 className="text-3xl font-bold text-white">
-                    {profile.full_name || "User"}
+                    {profile.full_name}
                   </h2>
                   <span
                     className={`badge ${
@@ -145,21 +255,8 @@ export default function ProfileView() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2 self-start md:self-auto md:pb-2">
-                <button
-                  onClick={() =>
-                    navigate(isStudent ? "/student-profile" : "/employer-profile")
-                  }
-                  className="btn-glow inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold"
-                >
-                  <Pencil size={16} /> Edit Profile
-                </button>
-                <button
-                  onClick={() => navigate(`/u/${profile.id}`)}
-                  className="btn-soft inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-sm"
-                >
-                  <ExternalLink size={14} /> Public view
-                </button>
+              <div className="self-start md:self-auto md:pb-2">
+                <ConnectButton />
               </div>
             </div>
           </div>
@@ -189,34 +286,45 @@ export default function ProfileView() {
         )}
 
         {/* SKILLS + ENDORSEMENTS */}
-        {isStudent && (
+        {isStudent && skills.length > 0 && (
           <div className="panel p-6">
             <h3 className="panel-title mb-4 inline-flex items-center gap-2">
               <Sparkles size={18} className="text-orange-400" /> Skills &
               Endorsements
             </h3>
-            {skills.length > 0 ? (
-              <div className="flex flex-wrap gap-2.5">
-                {skills.map((skill) => {
-                  const e = profile.endorsements?.[skill] || { count: 0 };
-                  return (
-                    <span
-                      key={skill}
-                      className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-200"
-                    >
-                      {skill}
-                      {e.count > 0 && (
-                        <span className="inline-flex items-center gap-1 text-cyan-300">
-                          <ThumbsUp size={12} /> {e.count}
-                        </span>
-                      )}
-                    </span>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="muted">No skills added yet.</p>
-            )}
+            <div className="flex flex-wrap gap-2.5">
+              {skills.map((skill) => {
+                const e = profile.endorsements[skill] || {
+                  count: 0,
+                  mine: false,
+                };
+                const canEndorse = conn.status !== "self";
+                return (
+                  <div
+                    key={skill}
+                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 pl-3 pr-1.5 py-1"
+                  >
+                    <span className="text-sm text-slate-200">{skill}</span>
+                    {e.count > 0 && (
+                      <span className="text-xs muted">{e.count}</span>
+                    )}
+                    {canEndorse && (
+                      <button
+                        onClick={() => toggleEndorse(skill)}
+                        title={e.mine ? "Remove endorsement" : "Endorse"}
+                        className={`rounded-full p-1.5 transition ${
+                          e.mine
+                            ? "bg-cyan-500/30 text-cyan-200"
+                            : "bg-white/5 text-slate-400 hover:text-cyan-300"
+                        }`}
+                      >
+                        <ThumbsUp size={13} />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -225,7 +333,9 @@ export default function ProfileView() {
           <h3 className="panel-title mb-4 inline-flex items-center gap-2">
             <Briefcase size={18} className="text-cyan-400" /> Experience
           </h3>
-          {profile.experiences?.length ? (
+          {profile.experiences.length === 0 ? (
+            <p className="muted">No experience listed.</p>
+          ) : (
             <div className="space-y-5">
               {profile.experiences.map((x) => (
                 <div key={x.id} className="flex gap-4">
@@ -252,17 +362,6 @@ export default function ProfileView() {
                 </div>
               ))}
             </div>
-          ) : (
-            <p className="muted">
-              No experience yet. Add some from{" "}
-              <button
-                onClick={() => navigate("/student-profile")}
-                className="text-cyan-300 underline"
-              >
-                Edit Profile
-              </button>
-              .
-            </p>
           )}
         </div>
 
@@ -271,7 +370,9 @@ export default function ProfileView() {
           <h3 className="panel-title mb-4 inline-flex items-center gap-2">
             <GraduationCap size={18} className="text-violet-400" /> Education
           </h3>
-          {profile.education_entries?.length ? (
+          {profile.education_entries.length === 0 ? (
+            <p className="muted">No education listed.</p>
+          ) : (
             <div className="space-y-5">
               {profile.education_entries.map((x) => (
                 <div key={x.id} className="flex gap-4">
@@ -292,29 +393,43 @@ export default function ProfileView() {
                 </div>
               ))}
             </div>
-          ) : (
-            <p className="muted">No education added yet.</p>
           )}
         </div>
 
         {/* CV */}
-        {isStudent && (
+        {isStudent && cvLink && (
           <div className="panel p-6">
             <h3 className="panel-title mb-4 inline-flex items-center gap-2">
               <FileText size={18} className="text-violet-400" /> CV / Resume
             </h3>
-            {cvLink ? (
-              <a
-                href={cvLink}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-glow inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold"
-              >
-                <Download size={16} /> View CV
-              </a>
-            ) : (
-              <p className="muted">No CV uploaded yet.</p>
-            )}
+            <a
+              href={cvLink}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-glow inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold"
+            >
+              <Download size={16} /> View CV
+            </a>
+          </div>
+        )}
+
+        {/* ACTIVITY */}
+        {profile.posts.length > 0 && (
+          <div className="panel p-6">
+            <h3 className="panel-title mb-4">Recent activity</h3>
+            <div className="space-y-4">
+              {profile.posts.map((p) => (
+                <div
+                  key={p.id}
+                  className="rounded-2xl border border-white/10 bg-white/5 p-4"
+                >
+                  <p className="text-xs muted mb-1">{timeAgo(p.created_at)}</p>
+                  <p className="text-slate-200 whitespace-pre-line">
+                    {p.content}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

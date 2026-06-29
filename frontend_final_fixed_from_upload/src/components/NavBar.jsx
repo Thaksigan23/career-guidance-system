@@ -46,6 +46,14 @@ export default function NavBar() {
       <Link to="/" className="nav-link">Home</Link>
       <Link to="/jobs" className="nav-link">Jobs</Link>
 
+      {/* SOCIAL (any logged-in user) */}
+      {user && (
+        <>
+          <Link to="/feed" className="nav-link">Feed</Link>
+          <Link to="/network" className="nav-link">Network</Link>
+        </>
+      )}
+
       {/* STUDENT MENU */}
       {user?.role === "student" && (
         <>

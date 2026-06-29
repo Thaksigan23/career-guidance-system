@@ -1,4 +1,5 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 import API, { downloadCVReport } from "../api/api";
 import { applyJob } from "../api/api";
 
@@ -73,9 +74,9 @@ const handleApply = async (jobId) => {
   try {
     await applyJob(jobId);
     setAppliedJobs(prev => [...prev, jobId]);
-    alert("Applied successfully!");
+    toast.success("Applied successfully!");
   } catch (err) {
-    alert(
+    toast.error(
       err.response?.data?.error ||
       "Failed to apply for job"
     );

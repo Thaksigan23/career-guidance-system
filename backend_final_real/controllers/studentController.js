@@ -45,7 +45,9 @@ export const getProfile = async (req, res) => {
 
   const { data: sp, error: spErr } = await supabase
     .from("student_profiles")
-    .select("education, degree, experience_years, skills, experience, cv_path")
+    .select(
+      "headline, about, location, open_to_work, education, degree, experience_years, skills, experience, cv_path"
+    )
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -54,9 +56,26 @@ export const getProfile = async (req, res) => {
     return res.status(500).json({ message: "Failed to load profile" });
   }
 
+  const { data: experiences } = await supabase
+    .from("experience_entries")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  const { data: education } = await supabase
+    .from("education_entries")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
   const profile = { ...(user || {}), ...(sp || {}) };
   const cvUrl = profile.cv_path ? `/uploads/${profile.cv_path}` : null;
-  res.json({ ...profile, cv_url: cvUrl });
+  res.json({
+    ...profile,
+    cv_url: cvUrl,
+    experiences: experiences || [],
+    education_entries: education || [],
+  });
 };
 
 // =====================================================
@@ -69,12 +88,28 @@ export const updateProfile = async (req, res) => {
   const {
     full_name,
     phone,
+    headline,
+    about,
+    location,
+    open_to_work,
     education,
     degree,
     experience_years,
     skills,
     experience,
   } = req.body;
+
+  const profileFields = {
+    headline,
+    about,
+    location,
+    open_to_work: open_to_work === undefined ? undefined : !!open_to_work,
+    education,
+    degree,
+    experience_years,
+    skills,
+    experience,
+  };
 
   // 1) Update users table
   const { error: userErr } = await supabase
@@ -96,11 +131,7 @@ export const updateProfile = async (req, res) => {
   if (!existing) {
     const { error: insertErr } = await supabase.from("student_profiles").insert({
       user_id: userId,
-      education,
-      degree,
-      experience_years,
-      skills,
-      experience,
+      ...profileFields,
     });
 
     if (insertErr) return res.status(500).json({ error: insertErr.message });
@@ -116,7 +147,7 @@ export const updateProfile = async (req, res) => {
 
   const { error: updateErr } = await supabase
     .from("student_profiles")
-    .update({ education, degree, experience_years, skills, experience })
+    .update(profileFields)
     .eq("user_id", userId);
 
   if (updateErr) return res.status(500).json({ error: updateErr.message });

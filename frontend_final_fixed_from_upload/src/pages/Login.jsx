@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, LogIn, Sparkles } from "lucide-react";
 import API from "../api/api";
+import { useApp } from "../context/AppContext.jsx";
 
 export default function Login() {
+  const navigate = useNavigate();
+  const { login } = useApp();
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -29,12 +32,16 @@ export default function Login() {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      if (res.data.user.role === "admin") {
-        window.location.href = "/admin";
-      } else if (res.data.user.role === "employer") {
-        window.location.href = "/employer-dashboard";
+      // Update global auth state so the navbar reflects the login immediately.
+      login(res.data.user);
+
+      const role = res.data.user.role;
+      if (role === "admin") {
+        navigate("/admin");
+      } else if (role === "employer") {
+        navigate("/employer-dashboard");
       } else {
-        window.location.href = "/student-profile";
+        navigate("/student-profile");
       }
     } catch (err) {
       console.error(err);
