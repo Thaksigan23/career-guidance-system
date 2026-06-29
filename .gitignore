@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+.env
+.env.*
+!.env.example
+
+# Local runtime/database artifacts
+backend_final_real/.local-mysql-data/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

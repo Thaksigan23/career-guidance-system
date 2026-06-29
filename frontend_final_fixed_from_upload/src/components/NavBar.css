@@ -1,0 +1,208 @@
+/* NAVBAR BASE — premium glass */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 50;
+  background: rgba(12, 10, 29, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.18);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.navbar-container {
+  max-width: 1280px;
+  margin: auto;
+  padding: 0 24px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* LOGO */
+.navbar-logo {
+  font-family: "Clash Display", sans-serif;
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+.navbar-logo:hover {
+  opacity: 0.85;
+}
+.navbar-logo span {
+  background: linear-gradient(100deg, #06b6d4, #8b5cf6 60%, #f97316);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* LINKS */
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.navbar .nav-link {
+  position: relative;
+  color: rgba(226, 232, 240, 0.82);
+  font-size: 0.92rem;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 10px;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.navbar .nav-link::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 4px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #06b6d4, #f97316);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
+}
+
+.navbar .nav-link:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+.navbar .nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+.navbar .admin-link {
+  background: rgba(139, 92, 246, 0.2);
+  color: #ddd6fe;
+  font-weight: 600;
+}
+
+/* REGISTER BUTTON */
+.navbar .register-btn {
+  background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+  color: #ffffff;
+  font-weight: 600;
+  padding: 9px 18px;
+  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.45);
+}
+.navbar .register-btn::after {
+  display: none;
+}
+.navbar .register-btn:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #22c3dd, #9b6cf7);
+}
+
+/* PROFILE */
+.profile-menu {
+  position: relative;
+}
+
+.profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 5px 12px 5px 5px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.2s ease;
+}
+.profile-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.profile-btn img {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+/* DROPDOWN */
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 54px;
+  width: 190px;
+  background: rgba(30, 27, 58, 0.97);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+  padding: 6px;
+}
+
+.navbar .dropdown-item,
+.dropdown .dropdown-item {
+  display: block;
+  padding: 11px 14px;
+  border-radius: 10px;
+  color: #e5e7eb;
+  font-weight: 500;
+  font-size: 0.9rem;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.dropdown .dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.dropdown .dropdown-item.danger {
+  color: #f87171;
+}
+.dropdown .dropdown-item.danger:hover {
+  background: rgba(248, 113, 113, 0.12);
+}
+
+/* ANIMATIONS */
+.fade-in {
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* MOBILE */
+.navbar-hamburger {
+  display: none;
+  font-size: 26px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+}
+
+@media (max-width: 900px) {
+  .navbar-links {
+    display: none;
+  }
+  .navbar-hamburger {
+    display: block;
+  }
+}
