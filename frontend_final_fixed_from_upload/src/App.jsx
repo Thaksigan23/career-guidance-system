@@ -83,14 +83,6 @@ function App() {
             SOCIAL / NETWORK (all roles)
         ================================= */}
         <Route
-          path="/feed"
-          element={
-            <ProtectedRoute allowedRoles={["student", "employer", "admin"]}>
-              <Feed />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/network"
           element={
             <ProtectedRoute allowedRoles={["student", "employer", "admin"]}>
